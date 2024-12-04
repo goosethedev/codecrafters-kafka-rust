@@ -33,12 +33,19 @@ async fn handle_connection(mut stream: TcpStream) -> Result<()> {
 
     // Use a buffered cursor to read parts of the message
     let mut msg = Cursor::new(msg);
-    msg.read_i16().await?; // request api key
-    msg.read_i16().await?; // request api version
+    let _request_api_key = msg.read_i16().await?; // request api key
+    let _request_api_ver = msg.read_i16().await?; // request api version
     let correlation_id = msg.read_i32().await?;
 
-    stream.write_all(&[0; 4]).await?;
+    // Hardcoded error code 35 (unsupported)
+    let response = 35_i16.to_be_bytes();
+
+    // Hardcoded response_len
+    let response_len = [0; 4];
+
+    stream.write_all(&response_len).await?;
     stream.write_all(&correlation_id.to_be_bytes()).await?;
+    stream.write_all(&response).await?;
 
     Ok(())
 }
